@@ -100,6 +100,34 @@ export const googleCallback = async (req, res) => {
 };
 
 
+// export const forgotPassword = async (req, res) => {
+//   const { email } = req.body;
+//   try {
+//     const user = await User.findOne({ email });
+//     if (!user) {
+//       return res.status(404).json({ message: "User not found" });
+//     }
+
+//     const resetToken = crypto.randomBytes(32).toString("hex");
+//     user.resetPasswordToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+//     user.resetPasswordExpire = Date.now() + 60 * 60 * 1000; // 1 hour
+    
+//     await user.save();
+    
+//     // Send email
+//     const emailResult = await sendPasswordResetEmail(email, resetToken);
+    
+//     if (!emailResult.success) {
+//       return res.status(500).json({ message: "Error sending email" });
+//     }
+    
+//     res.status(200).json({ message: "Password reset email sent" });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// };
+
 export const forgotPassword = async (req, res) => {
   const { email } = req.body;
   try {
@@ -110,23 +138,36 @@ export const forgotPassword = async (req, res) => {
 
     const resetToken = crypto.randomBytes(32).toString("hex");
     user.resetPasswordToken = crypto.createHash("sha256").update(resetToken).digest("hex");
-    user.resetPasswordExpire = Date.now() + 60 * 60 * 1000; // 1 hour
+    user.resetPasswordExpire = Date.now() + 60 * 60 * 1000;
     
     await user.save();
+
+    console.log("Attempting to send email to:", email);
+    console.log("EMAIL_USER set:", !!process.env.EMAIL_USER);
+    console.log("EMAIL_PASS set:", !!process.env.EMAIL_PASS);
+    console.log("CLIENT_URL:", process.env.CLIENT_URL);
     
-    // Send email
     const emailResult = await sendPasswordResetEmail(email, resetToken);
     
+    console.log("Email result:", emailResult);
+    
     if (!emailResult.success) {
-      return res.status(500).json({ message: "Error sending email" });
+      console.error("Email failed:", emailResult.error); 
+      return res.status(500).json({ 
+        message: "Error sending email",
+        error: emailResult.error  
+      });
     }
     
     res.status(200).json({ message: "Password reset email sent" });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error" });
+    console.error("forgotPassword full error:", error); 
+    res.status(500).json({ message: "Server error", detail: error.message });
   }
 };
+
+
+
 
 export const resetPassword = async (req, res) => {
   const { token, newPassword } = req.body;
@@ -172,31 +213,3 @@ export const getMe = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-
-//   const { token } = req.params;  
-//   const { newPassword } = req.body;
-  
-//   try {
-//     const resetToken = crypto.createHash("sha256").update(token).digest("hex");
-    
-//     const user = await User.findOne({
-//       resetPasswordToken: resetToken,
-//       resetPasswordExpire: { $gt: Date.now() }
-//     });
-    
-//     if (!user) {
-//       return res.status(400).json({ message: "Invalid or expired reset token" });
-//     }
-    
-//     user.password = newPassword;
-//     user.resetPasswordToken = undefined;
-//     user.resetPasswordExpire = undefined;
-    
-//     await user.save();
-    
-//     res.status(200).json({ message: "Password reset successful. You can now log in." });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ message: "Server error" });
-//   }
-// };
