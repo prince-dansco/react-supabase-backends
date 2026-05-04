@@ -42,7 +42,7 @@ app.use(
 const allowedOrigins = [
   "http://localhost:5173",
   
-  ""
+  "https://react-supabase-frontend.vercel.app"
 ];
 
 const corsOptions = {
