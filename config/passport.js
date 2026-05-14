@@ -60,6 +60,7 @@
 
 // config/passport.js
 
+
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import User from "../model/User.js";
@@ -74,21 +75,27 @@ passport.use(
     async (accessToken, refreshToken, profile, done) => {
       try {
         const email = profile.emails[0].value;
+        console.log("Google OAuth attempt for email:", email);
 
-        // 1. Already linked Google account
+        // Step 1: already has Google account
         let user = await User.findOne({ googleId: profile.id });
-        if (user) return done(null, user);
+        if (user) {
+          console.log("Found existing Google user");
+          return done(null, user);
+        }
 
-        // 2. ← THIS IS THE CRITICAL PART — email already registered manually
+        // Step 2: registered manually with same email
         user = await User.findOne({ email });
         if (user) {
+          console.log("Found existing email user, linking Google account");
           user.googleId = profile.id;
           user.avatar = profile.photos[0].value;
           await user.save();
           return done(null, user);
         }
 
-        // 3. Brand new user — create only if email doesn't exist
+        // Step 3: brand new user
+        console.log("Creating new Google user");
         user = await User.create({
           name: profile.displayName,
           email,
@@ -106,6 +113,7 @@ passport.use(
 );
 
 passport.serializeUser((user, done) => done(null, user._id));
+
 passport.deserializeUser(async (id, done) => {
   try {
     const user = await User.findById(id);
