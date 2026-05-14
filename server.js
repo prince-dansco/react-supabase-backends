@@ -43,7 +43,7 @@ app.use(
     saveUninitialized: false,
     store: MongoStore.create({
       mongoUrl: process.env.MONGO_URL,
-      ttl: 24 * 60 * 60, // 1 day
+      ttl: 24 * 60 * 60, 
       autoRemove: 'native',
     }),
     cookie: {
@@ -55,7 +55,6 @@ app.use(
   })
 );
 
-// CORS configuration
 const allowedOrigins = [
   "http://localhost:5173",
   "https://react-supabase-frontend.vercel.app"
